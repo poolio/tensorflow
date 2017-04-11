@@ -166,14 +166,6 @@ def copy_op_handler(info, op, copy_shape=True):
     for t, t_ in zip(op.outputs, op_.outputs):
       t_.set_shape(t.get_shape())
 
-  # Finalize original op.
-  if op._original_op:
-    original_op = info.transform_original_op_handler(info, op._original_op)
-    if original_op is None:
-      logging.debug("Could not find original op of: %s", op_.name)
-    else:
-      op_._original_op = original_op
-
   # Add op to the graph
   info.graph_._add_op(op_)
 
@@ -470,7 +462,15 @@ class Transformer(object):
       inputs_ = [self._transformed_t(info, t) for t in op.inputs]
       for t in inputs_:
         op_._add_input(t)
-
+        
+      # Finalize original op:
+      if op._original_op:
+        original_op = info.transform_original_op_handler(info, op._original_op)
+        if original_op is None:
+          logging.debug("Could not find original op of: %s", op_.name)
+        else:
+          op_._original_op = original_op
+            
       # Finalize control inputs:
       control_inputs_ = [self.transform_control_input_handler(info, ci)
                          for ci in op.control_inputs]
